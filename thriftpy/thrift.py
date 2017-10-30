@@ -27,7 +27,7 @@ def parse_spec(ttype, spec=None):
     def _type(s):
         return parse_spec(*s) if isinstance(s, tuple) else name_map[s]
 
-    if spec is None:
+    if not spec:
         return name_map[ttype]
 
     if ttype == TType.STRUCT:
@@ -134,10 +134,10 @@ class TPayloadMeta(type):
 
 
 def gen_init(cls, thrift_spec=None, default_spec=None):
-    if thrift_spec is not None:
+    if thrift_spec:
         cls.thrift_spec = thrift_spec
 
-    if default_spec is not None:
+    if default_spec:
         cls.__init__ = init_func_generator(cls, default_spec)
     return cls
 
@@ -172,7 +172,7 @@ class TClient(object):
     def __init__(self, service, iprot, oprot=None):
         self._service = service
         self._iprot = self._oprot = iprot
-        if oprot is not None:
+        if oprot:
             self._oprot = oprot
         self._seqid = 0
 
@@ -217,11 +217,11 @@ class TClient(object):
         result.read(self._iprot)
         self._iprot.read_message_end()
 
-        if hasattr(result, "success") and result.success is not None:
+        if hasattr(result, "success") and result.success:
             return result.success
 
         # void api without throws
-        if len(result.thrift_spec) == 0:
+        if not result.thrift_spec:
             return
 
         # check throws
@@ -297,11 +297,9 @@ class TProcessor(object):
         if isinstance(result, TApplicationException):
             return self.send_exception(oprot, api, result, seqid)
 
-        try:
-            result.success = call()
-        except Exception as e:
-            # raise if api don't have throws
-            self.handle_exception(e, result)
+        try: result.success = call()
+        except Exception as e: self.handle_exception(e, result)
+            # raise if api doesn't have throws
 
         if not result.oneway:
             self.send_result(oprot, api, result, seqid)
