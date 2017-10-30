@@ -188,6 +188,18 @@ class THttpClient(object):
         if timeout:
             self.setTimeout(timeout)
         self._ssl_context_factory = ssl_context_factory
+        if (not self.__custom_headers or
+                'User-Agent' not in self.__custom_headers):
+            user_agent = 'Python/THttpClient'
+            #UA can be changed to application-specific
+            script = os.path.basename(sys.argv[0])
+            if script:
+                user_agent = '%s (%s)' % (
+                    user_agent, urllib.parse.quote(script))
+                self.__http.putheader('User-Agent', user_agent)
+            if self.__custom_headers:
+                for key, val in self.__custom_headers.items():
+                    self.__http.putheader(key, val)
 
     def open(self):
         if self.scheme == "https":
@@ -237,19 +249,6 @@ class THttpClient(object):
         self.__http.putheader('Host', self.host)
         self.__http.putheader('Content-Type', 'application/x-thrift')
         self.__http.putheader('Content-Length', str(len(data)))
-
-        if (not self.__custom_headers or
-                'User-Agent' not in self.__custom_headers):
-            user_agent = 'Python/THttpClient'
-            script = os.path.basename(sys.argv[0])
-            if script:
-                user_agent = '%s (%s)' % (
-                    user_agent, urllib.parse.quote(script))
-                self.__http.putheader('User-Agent', user_agent)
-
-        if self.__custom_headers:
-            for key, val in self.__custom_headers.items():
-                self.__http.putheader(key, val)
 
         self.__http.endheaders()
 
