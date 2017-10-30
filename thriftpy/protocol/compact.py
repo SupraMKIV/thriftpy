@@ -51,8 +51,8 @@ def from_zig_zag(n):
 
 def write_varint(trans, n):
     out = []
-    while True:
-        if n & ~0x7f == 0:
+    while 1:
+        if not n & ~0x7f:
             out.append(n)
             break
         else:
@@ -238,7 +238,7 @@ class TCompactProtocol(object):
         return byte_payload
 
     def read_bool(self):
-        if self._bool_value is not None:
+        if self._bool_value:
             result = self._bool_value
             self._bool_value = None
             return result
@@ -261,7 +261,7 @@ class TCompactProtocol(object):
                 self.skip(ftype)
                 raise
             else:
-                if field is not None and ftype == field[0]:
+                if field and ftype == field[0]:
                     fname = field[1]
                     fspec = field[2]
                     val = self.read_val(ftype, fspec)
@@ -294,7 +294,6 @@ class TCompactProtocol(object):
                 v_type, v_spec = spec, None
             result = []
             r_type, sz = self.read_collection_begin()
-
             for i in range(sz):
                 result.append(self.read_val(v_type, v_spec))
 
@@ -434,7 +433,7 @@ class TCompactProtocol(object):
         self.write_struct_begin()
 
         for field in obj.thrift_spec:
-            if field is None:
+            if not field:
                 continue
             fspec = obj.thrift_spec[field]
             if len(fspec) == 3:
@@ -443,8 +442,7 @@ class TCompactProtocol(object):
             else:
                 ftype, fname, f_container_spec, f_req = fspec
             val = getattr(obj, fname)
-            if val is None:
-                continue
+            if not val: continue
 
             self.write_field_begin(fname, ftype, field)
             self.write_val(ftype, val, f_container_spec)
