@@ -57,7 +57,7 @@ class TTornadoStreamTransport(TTransportBase):
 
         # servers provide a ready-to-go stream
         self.stream = stream
-        if self.stream is not None:
+        if self.stream:
             self._set_close_callback()
 
     def with_timeout(self, timeout, future):
@@ -67,7 +67,7 @@ class TTornadoStreamTransport(TTransportBase):
     def open(self, timeout=DEFAULT_CONNECT_TIMEOUT):
         logger.debug('socket connecting')
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-        if self.ssl_options is None:
+        if self.ssl_options:
             self.stream = iostream.IOStream(sock)
         else:
             self.stream = iostream.SSLIOStream(
@@ -121,7 +121,7 @@ class TTornadoStreamTransport(TTransportBase):
         with (yield self._read_lock.acquire()):
             with self.io_exception_context():
                 frame_header = yield self._read_bytes(4)
-                if len(frame_header) == 0:
+                if not frame_header:
                     raise iostream.StreamClosedError(
                         'Read zero bytes from stream')
                 frame_length, = struct.unpack('!i', frame_header)
