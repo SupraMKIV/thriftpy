@@ -19,7 +19,7 @@ from ..thrift import gen_init, TType, TPayload, TException
 
 
 def p_error(p):
-    if p is None:
+    if not p:
         raise ThriftGrammerError('Grammer error at EOF')
     raise ThriftGrammerError('Grammer error %r at line %d' %
                              (p.value, p.lineno))
@@ -47,7 +47,7 @@ def p_header_unit(p):
 def p_include(p):
     '''include : INCLUDE LITERAL'''
     thrift = thrift_stack[-1]
-    if thrift.__thrift_file__ is None:
+    if not thrift.__thrift_file__:
         raise ThriftParserError('Unexcepted include statement while loading'
                                 'from file like object.')
     replace_include_dirs = [os.path.dirname(thrift.__thrift_file__)] \
@@ -157,11 +157,11 @@ def p_const_ref(p):
     for name in p[1].split('.'):
         father = child
         child = getattr(child, name, None)
-        if child is None:
+        if not child:
             raise ThriftParserError('Cann\'t find name %r at line %d'
                                     % (p[1], p.lineno(1)))
 
-    if _get_ttype(child) is None or _get_ttype(father) == TType.I32:
+    if not _get_ttype(child) or _get_ttype(father) == TType.I32:
         # child is a constant or enum value
         p[0] = child
     else:
@@ -250,7 +250,7 @@ def p_simple_service(p):
         extends = thrift
         for name in p[4].split('.'):
             extends = getattr(extends, name, None)
-            if extends is None:
+            if not extends
                 raise ThriftParserError('Can\'t find service %r for '
                                         'service %r to extend' %
                                         (p[4], p[2]))
@@ -376,7 +376,7 @@ def p_ref_type(p):
 
     for name in p[1].split('.'):
         ref_type = getattr(ref_type, name, None)
-        if ref_type is None:
+        if not ref_type:
             raise ThriftParserError('No type found: %r, at line %d' %
                                     (p[1], p.lineno(1)))
 
@@ -509,7 +509,7 @@ def parse(path, module_name=None, include_dirs=None, include_dir=None,
 
     # dead include checking on current stack
     for thrift in thrift_stack:
-        if thrift.__thrift_file__ is not None and \
+        if thrift.__thrift_file__ and \
                 os.path.samefile(path, thrift.__thrift_file__):
             raise ThriftParserError('Dead including on %s' % path)
 
@@ -520,16 +520,16 @@ def parse(path, module_name=None, include_dirs=None, include_dir=None,
     if enable_cache and cache_key in thrift_cache:
         return thrift_cache[cache_key]
 
-    if lexer is None:
+    if not lexer:
         lexer = lex.lex()
-    if parser is None:
+    if not parser:
         parser = yacc.yacc(debug=False, write_tables=0)
 
     global include_dirs_
 
-    if include_dirs is not None:
+    if include_dirs:
         include_dirs_ = include_dirs
-    if include_dir is not None:
+    if include_dir:
         include_dirs_.append(include_dir)
 
     if not path.endswith('.thrift'):
@@ -549,11 +549,11 @@ def parse(path, module_name=None, include_dirs=None, include_dir=None,
                                 'with path in protocol \'{}\''.format(
                                     url_scheme))
 
-    if module_name is not None and not module_name.endswith('_thrift'):
+    if module_name and not module_name.endswith('_thrift'):
         raise ThriftParserError('ThriftPy can only generate module with '
                                 '\'_thrift\' suffix')
 
-    if module_name is None:
+    if not module_name:
         basename = os.path.basename(path)
         module_name = os.path.splitext(basename)[0]
 
@@ -596,9 +596,9 @@ def parse_fp(source, module_name, lexer=None, parser=None, enable_cache=True):
         raise ThriftParserError('Except `source` to be a file-like object with'
                                 'a method named \'read\'')
 
-    if lexer is None:
+    if not lexer:
         lexer = lex.lex()
-    if parser is None:
+    if not parser:
         parser = yacc.yacc(debug=False, write_tables=0)
 
     data = source.read()
@@ -786,10 +786,10 @@ def _make_enum(name, kvs):
 
     if kvs:
         val = kvs[0][1]
-        if val is None:
+        if not val:
             val = -1
         for item in kvs:
-            if item[1] is None:
+            if not item[1]:
                 item[1] = val + 1
             val = item[1]
         for key, val in kvs:
@@ -835,7 +835,7 @@ def _make_struct(name, fields, ttype=TType.STRUCT, base_cls=TPayload,
 
 
 def _make_service(name, funcs, extends):
-    if extends is None:
+    if not extends:
         extends = object
 
     attrs = {'__module__': thrift_stack[-1].__name__}
@@ -863,7 +863,7 @@ def _make_service(name, funcs, extends):
         gen_init(result_cls, result_cls.thrift_spec, result_cls.default_spec)
         setattr(cls, result_name, result_cls)
         thrift_services.append(func_name)
-    if extends is not None and hasattr(extends, 'thrift_services'):
+    if extends and hasattr(extends, 'thrift_services'):
         thrift_services.extend(extends.thrift_services)
     setattr(cls, 'thrift_services', thrift_services)
     return cls
