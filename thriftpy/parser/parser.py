@@ -250,7 +250,7 @@ def p_simple_service(p):
         extends = thrift
         for name in p[4].split('.'):
             extends = getattr(extends, name, None)
-            if not extends
+            if not extends:
                 raise ThriftParserError('Can\'t find service %r for '
                                         'service %r to extend' %
                                         (p[4], p[2]))
