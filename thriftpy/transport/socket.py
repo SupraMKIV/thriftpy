@@ -78,7 +78,7 @@ class TSocket(object):
         self.socket_timeout = ms / 1000 if (ms and ms > 0) else None
         self.connect_timeout = self.socket_timeout
 
-        if self.sock is not None:
+        if self.sock:
             self.sock.settimeout(self.socket_timeout)
 
     def is_open(self):
@@ -120,7 +120,7 @@ class TSocket(object):
             else:
                 raise
 
-        if len(buff) == 0:
+        if not buff:
             raise TTransportException(type=TTransportException.END_OF_FILE,
                                       message='TSocket read 0 bytes')
         return buff
